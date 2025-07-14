@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Organizing India Blog Network</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      background: #111;
+      color: #eee;
+      font-family: sans-serif;
+    }
+    #graph {
+      width: 100vw;
+      height: 100vh;
+    }
+    #search {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 10;
+    }
+    #legend {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 8px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 4px;
+      font-size: 14px;
+      max-width: 200px;
+      color: #fff;
+    }
+    .legend-color {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <input type="text" id="search" placeholder="🔍 Search..." />
+  <div id="legend"></div>
+  <canvas id="graph"></canvas>
+  <script src="https://cdn.jsdelivr.net/npm/sigma@2.4.0/build/sigma.min.js"></script>
+  <script>
+    async function loadGraph() {
+      const response = await fetch('graph-data.json');
+      const data = await response.json();
+
+      const container = document.getElementById("graph");
+      const graph = {
+        nodes: data.nodes.map(n => ({
+          ...n,
+          label: n.label,
+          size: 8,
+          color: n.color || "#888"
+        })),
+        edges: data.edges.map((e, i) => ({
+          ...e,
+          id: "e" + i,
+          size: 0.5,
+          color: "#999"
+        }))
+      };
+
+      const renderer = new sigma.Sigma(graph, container, {
+        renderEdgeLabels: false,
+        allowInvalidContainer: false,
+        zIndex: true
+      });
+
+      // Zoom and drag enabled by default
+      // Tooltip on hover
+      renderer.on("enterNode", ({ node }) => {
+        container.title = graph.nodes.find(n => n.id === node).label;
+      });
+
+      renderer.on("leaveNode", () => {
+        container.title = "";
+      });
+
+      renderer.on("clickNode", ({ node }) => {
+        const found = graph.nodes.find(n => n.id === node);
+        if (found && found.url) window.open(found.url, "_blank");
+      });
+
+      // Search logic
+      document.getElementById("search").addEventListener("input", e => {
+        const query = e.target.value.toLowerCase();
+        renderer.setSetting("nodeReducer", (node, data) => {
+          if (!query) return {};
+          return data.label.toLowerCase().includes(query)
+            ? { zIndex: 1 }
+            : { hidden: true };
+        });
+        renderer.refresh();
+      });
+
+      // Simple legend
+      const legendData = [...new Set(graph.nodes.map(n => n.cluster))].sort();
+      const legendColors = {};
+      legendData.forEach((cl, i) => {
+        legendColors[cl] = graph.nodes.find(n => n.cluster === cl)?.color || "#888";
+      });
+
+      const legend = document.getElementById("legend");
+      legend.innerHTML = `<strong>Topic Clusters</strong><br>` +
+        legendData.map(c =>
+          `<div><span class="legend-color" style="background:${legendColors[c]}"></span>${c}</div>`
+        ).join("");
+    }
+
+    loadGraph();
+  </script>
+</body>
+</html>
