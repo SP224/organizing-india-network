@@ -34,8 +34,8 @@
 <body>
   <input type="text" id="search" placeholder="🔍 Search articles..." />
   <div id="graph"></div>
-  <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
-  <script>
+  <script src="https://unpkg.com/force-graph@1.42.0"></script>
+  
     const searchBox = document.getElementById("search");
     const Graph = ForceGraph()(document.getElementById("graph"))
       .width(window.innerWidth)
