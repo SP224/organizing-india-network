@@ -78,57 +78,216 @@
   <div id="error" style="display: none;"></div>
   <script>
 // Google Sheets integration
-const GOOGLE_SHEETS_API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your API key
-const SPREADSHEET_ID = '1N-CLQAwxBCJlZdhz-O8MQS210nAWh2gMJorq_H6C9AU';
-const SHEET_RANGE = 'Sheet1!A:F'; // Adjust range as needed
+</script>
+// Configuration constants
+const CONFIG = {
+  SPREADSHEET_ID: '1N-CLQAwxBCJlZdhz-O8MQS210nAWh2gMJorq_H6C9AU',
+  SHEET_RANGE: 'Sheet1!A:F',
+  SIMILARITY_THRESHOLD: 0.3,
+  SEMANTIC_SCORE_WEIGHT: 0.2,
+  MAX_CLUSTER_CONNECTIONS: 3,
+  DEFAULT_CLUSTER: 'Uncategorized',
+  DEFAULT_COLOR: '#999999'
+};
 
-async function loadFromGoogleSheets() {
+// Predefined cluster colors
+const CLUSTER_COLORS = {
+  'Energy': '#f94144',
+  'Digital': '#577590', 
+  'Governance': '#f8961e',
+  'Infrastructure': '#90a955',
+  'Policy': '#277da1'
+};
+
+// Topic keywords for semantic matching
+const TOPIC_KEYWORDS = {
+  'gameTheory': ['game theory', 'collaboration', 'cooperation', 'strategy'],
+  'spectrum': ['spectrum', '5g', 'broadband', 'wireless', 'telecommunications'],
+  'governance': ['governance', 'regulation', 'policy', 'institutional'],
+  'infrastructure': ['infrastructure', 'network', 'connectivity', 'digital']
+};
+
+// Fallback data in case Google Sheets fails
+const FALLBACK_DATA = {
+  nodes: [
+    {
+      id: '1',
+      label: 'Sample Energy Article',
+      url: 'https://example.com/energy',
+      cluster: 'Energy',
+      color: CLUSTER_COLORS['Energy'],
+      date: '2024-01-01',
+      tags: ['renewable', 'policy']
+    },
+    {
+      id: '2',
+      label: 'Digital Infrastructure Report',
+      url: 'https://example.com/digital',
+      cluster: 'Digital',
+      color: CLUSTER_COLORS['Digital'],
+      date: '2024-01-02',
+      tags: ['5g', 'connectivity']
+    }
+  ],
+  links: [
+    {
+      source: '1',
+      target: '2',
+      strength: 0.5,
+      type: 'cross-topic'
+    }
+  ]
+};
+
+/**
+ * Safely retrieves API key from environment or config
+ * In production, this should come from server-side or secure config
+ */
+function getApiKey() {
+  // Check for environment variable (Node.js) or global config
+  if (typeof process !== 'undefined' && process.env && process.env.GOOGLE_SHEETS_API_KEY) {
+    return process.env.GOOGLE_SHEETS_API_KEY;
+  }
+  
+  // Check for global config object (set by server)
+  if (typeof window !== 'undefined' && window.GOOGLE_API_CONFIG) {
+    return window.GOOGLE_API_CONFIG.apiKey;
+  }
+  
+  // Warn about missing API key
+  console.warn('Google Sheets API key not found. Using fallback data.');
+  return null;
+}
+
+/**
+ * Validates and sanitizes spreadsheet row data
+ */
+function validateRowData(row, index) {
+  if (!Array.isArray(row) || row.length < 2) {
+    console.warn(`Row ${index + 1} is invalid or missing required data`);
+    return null;
+  }
+
+  const title = row[0] && String(row[0]).trim();
+  const url = row[1] && String(row[1]).trim();
+  
+  if (!title || !url) {
+    console.warn(`Row ${index + 1} missing title or URL`);
+    return null;
+  }
+
+  // Basic URL validation
   try {
-    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_RANGE}?key=${GOOGLE_SHEETS_API_KEY}`);
+    new URL(url);
+  } catch (e) {
+    console.warn(`Row ${index + 1} has invalid URL: ${url}`);
+    return null;
+  }
+
+  return {
+    title,
+    url,
+    cluster: row[2] ? String(row[2]).trim() : CONFIG.DEFAULT_CLUSTER,
+    date: row[3] ? String(row[3]).trim() : '',
+    tags: row[4] && String(row[4]).trim() ? 
+      String(row[4]).split(',').map(t => t.trim()).filter(t => t.length > 0) : 
+      [],
+    description: row[5] ? String(row[5]).trim() : ''
+  };
+}
+
+/**
+ * Main function to load data from Google Sheets
+ */
+async function loadFromGoogleSheets() {
+  const apiKey = getApiKey();
+  
+  if (!apiKey) {
+    console.log('No API key available, using fallback data');
+    return FALLBACK_DATA;
+  }
+
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}/values/${CONFIG.SHEET_RANGE}?key=${apiKey}`;
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
     const data = await response.json();
     
-    return convertSheetsToNetworkData(data.values);
+    if (!data.values || !Array.isArray(data.values) || data.values.length < 2) {
+      throw new Error('Invalid or empty spreadsheet data');
+    }
+
+    const networkData = convertSheetsToNetworkData(data.values);
+    
+    if (!networkData.nodes.length) {
+      throw new Error('No valid data rows found');
+    }
+
+    return networkData;
+    
   } catch (error) {
-    console.error('Google Sheets load failed, using fallback JSON:', error);
-    return null;
+    console.error('Google Sheets load failed:', error.message);
+    console.log('Using fallback data instead');
+    return FALLBACK_DATA;
   }
 }
 
+/**
+ * Converts spreadsheet data to network visualization format
+ */
 function convertSheetsToNetworkData(rows) {
+  if (!Array.isArray(rows) || rows.length < 2) {
+    throw new Error('Invalid rows data');
+  }
+
   const [headers, ...dataRows] = rows;
   const nodes = [];
   const links = [];
-  const clusterColors = {
-    'Energy': '#f94144',
-    'Digital': '#577590', 
-    'Governance': '#f8961e',
-    'Infrastructure': '#90a955',
-    'Policy': '#277da1'
-  };
   
-  // Convert rows to nodes
+  console.log(`Processing ${dataRows.length} rows from spreadsheet`);
+
+  // Convert rows to nodes with validation
   dataRows.forEach((row, index) => {
-    if (row[0] && row[1]) { // Ensure title and URL exist
+    const validatedData = validateRowData(row, index);
+    
+    if (validatedData) {
       nodes.push({
         id: String(index + 1),
-        label: row[0], // Title
-        url: row[1], // URL
-        cluster: row[2] || 'Uncategorized', // Category
-        color: clusterColors[row[2]] || '#999999',
-        date: row[3], // Publication date
-        tags: row[4] ? row[4].split(',').map(t => t.trim()) : [] // Tags
+        label: validatedData.title,
+        url: validatedData.url,
+        cluster: validatedData.cluster,
+        color: CLUSTER_COLORS[validatedData.cluster] || CONFIG.DEFAULT_COLOR,
+        date: validatedData.date,
+        tags: validatedData.tags,
+        description: validatedData.description
       });
     }
   });
-  
-  // Create topic-based connections
+
+  if (nodes.length === 0) {
+    throw new Error('No valid nodes created from spreadsheet data');
+  }
+
+  // Create connections between nodes
   createTopicConnections(nodes, links);
+  
+  console.log(`Created network with ${nodes.length} nodes and ${links.length} links`);
   
   return { nodes, links };
 }
 
+/**
+ * Creates connections within clusters and cross-topic connections
+ */
 function createTopicConnections(nodes, links) {
-  // Connect nodes within same cluster
+  const existingLinks = new Set(); // Track existing connections to prevent duplicates
+  
+  // Group nodes by cluster
   const clusterGroups = {};
   nodes.forEach(node => {
     if (!clusterGroups[node.cluster]) {
@@ -136,233 +295,385 @@ function createTopicConnections(nodes, links) {
     }
     clusterGroups[node.cluster].push(node);
   });
-  
-  // Create intra-cluster connections
-  Object.values(clusterGroups).forEach(cluster => {
-    for (let i = 0; i < cluster.length - 1; i++) {
-      for (let j = i + 1; j < Math.min(i + 3, cluster.length); j++) {
-        links.push({
-          source: cluster[i].id,
-          target: cluster[j].id,
-          strength: 1
-        });
-      }
-    }
-  });
-  
-  // Create cross-topic connections based on tags
-  createCrossTopicConnections(nodes, links);
-}
 
-function createCrossTopicConnections(nodes, links) {
-  const topicKeywords = {
-    'gameTheory': ['game theory', 'collaboration', 'cooperation', 'strategy'],
-    'spectrum': ['spectrum', '5g', 'broadband', 'wireless', 'telecommunications'],
-    'governance': ['governance', 'regulation', 'policy', 'institutional'],
-    'infrastructure': ['infrastructure', 'network', 'connectivity', 'digital']
-  };
-  
-  // Find semantic connections
-  nodes.forEach(node1 => {
-    nodes.forEach(node2 => {
-      if (node1.id !== node2.id && node1.cluster !== node2.cluster) {
-        const similarity = calculateSemanticSimilarity(node1, node2, topicKeywords);
-        if (similarity > 0.3) { // Threshold for connection
+  // Create intra-cluster connections
+  Object.entries(clusterGroups).forEach(([clusterName, cluster]) => {
+    if (cluster.length < 2) {
+      console.log(`Cluster '${clusterName}' has only one node, skipping intra-cluster connections`);
+      return;
+    }
+
+    for (let i = 0; i < cluster.length - 1; i++) {
+      const maxConnections = Math.min(i + CONFIG.MAX_CLUSTER_CONNECTIONS + 1, cluster.length);
+      
+      for (let j = i + 1; j < maxConnections; j++) {
+        const linkId = `${cluster[i].id}-${cluster[j].id}`;
+        const reverseLinkId = `${cluster[j].id}-${cluster[i].id}`;
+        
+        if (!existingLinks.has(linkId) && !existingLinks.has(reverseLinkId)) {
           links.push({
-            source: node1.id,
-            target: node2.id,
-            strength: similarity,
-            type: 'cross-topic'
+            source: cluster[i].id,
+            target: cluster[j].id,
+            strength: 1,
+            type: 'intra-cluster'
           });
+          existingLinks.add(linkId);
         }
       }
-    });
-  });
-}
-
-function calculateSemanticSimilarity(node1, node2, topicKeywords) {
-  let score = 0;
-  const text1 = (node1.label + ' ' + (node1.tags || []).join(' ')).toLowerCase();
-  const text2 = (node2.label + ' ' + (node2.tags || []).join(' ')).toLowerCase();
-  
-  Object.values(topicKeywords).forEach(keywords => {
-    const matches1 = keywords.filter(kw => text1.includes(kw)).length;
-    const matches2 = keywords.filter(kw => text2.includes(kw)).length;
-    if (matches1 > 0 && matches2 > 0) {
-      score += Math.min(matches1, matches2) * 0.2;
     }
   });
-  
-  return Math.min(score, 1);
-}
-</script>
 
+  // Create cross-topic connections
+  createCrossTopicConnections(nodes, links, existingLinks);
+}
+
+/**
+ * Creates semantic connections between different clusters
+ */
+function createCrossTopicConnections(nodes, links, existingLinks) {
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const node1 = nodes[i];
+      const node2 = nodes[j];
+      
+      // Only connect nodes from different clusters
+      if (node1.cluster === node2.cluster) continue;
+      
+      const linkId = `${node1.id}-${node2.id}`;
+      const reverseLinkId = `${node2.id}-${node1.id}`;
+      
+      // Skip if connection already exists
+      if (existingLinks.has(linkId) || existingLinks.has(reverseLinkId)) continue;
+      
+      const similarity = calculateSemanticSimilarity(node1, node2);
+      
+      if (similarity > CONFIG.SIMILARITY_THRESHOLD) {
+        links.push({
+          source: node1.id,
+          target: node2.id,
+          strength: similarity,
+          type: 'cross-topic'
+        });
+        existingLinks.add(linkId);
+      }
+    }
+  }
+}
+
+/**
+ * Calculates semantic similarity between two nodes based on keywords
+ */
+function calculateSemanticSimilarity(node1, node2) {
+  let score = 0;
+  
+  const text1 = [
+    node1.label,
+    ...(node1.tags || []),
+    node1.description || ''
+  ].join(' ').toLowerCase();
+  
+  const text2 = [
+    node2.label,
+    ...(node2.tags || []),
+    node2.description || ''
+  ].join(' ').toLowerCase();
+
+  // Compare against each topic keyword group
+  Object.values(TOPIC_KEYWORDS).forEach(keywords => {
+    const matches1 = keywords.filter(keyword => text1.includes(keyword)).length;
+    const matches2 = keywords.filter(keyword => text2.includes(keyword)).length;
+    
+    if (matches1 > 0 && matches2 > 0) {
+      score += Math.min(matches1, matches2) * CONFIG.SEMANTIC_SCORE_WEIGHT;
+    }
+  });
+
+  return Math.min(score, 1); // Cap at 1.0
+}
+
+/**
+ * Utility function to add new cluster colors dynamically
+ */
+function addClusterColor(clusterName, color) {
+  CLUSTER_COLORS[clusterName] = color;
+}
+
+/**
+ * Utility function to get network statistics
+ */
+function getNetworkStats(networkData) {
+  const { nodes, links } = networkData;
+  
+  const clusterCounts = {};
+  nodes.forEach(node => {
+    clusterCounts[node.cluster] = (clusterCounts[node.cluster] || 0) + 1;
+  });
+  
+  const linkTypes = {};
+  links.forEach(link => {
+    linkTypes[link.type] = (linkTypes[link.type] || 0) + 1;
+  });
+  
+  return {
+    totalNodes: nodes.length,
+    totalLinks: links.length,
+    clusters: clusterCounts,
+    linkTypes: linkTypes,
+    avgLinksPerNode: (links.length * 2) / nodes.length // Each link connects 2 nodes
+  };
+}
+
+// Export functions for use in modules or testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    loadFromGoogleSheets,
+    convertSheetsToNetworkData,
+    addClusterColor,
+    getNetworkStats,
+    CONFIG,
+    CLUSTER_COLORS
+  };
+}
   <script src="https://unpkg.com/force-graph@1.43.0"></script>
   <script>
-    const searchBox = document.getElementById("search");
-    const errorDiv = document.getElementById("error");
-    const nodeCountSpan = document.getElementById("nodeCount");
-    const linkCountSpan = document.getElementById("linkCount");
-    
-    let showLinks = true;
-    let originalData = null;
-    
-    const Graph = ForceGraph()(document.getElementById("graph"))
-      .width(window.innerWidth)
-      .height(window.innerHeight)
-      .nodeAutoColorBy("cluster")
-      .nodeLabel(node => `<div style="background: rgba(0,0,0,0.8); padding: 5px; border-radius: 3px; color: white; max-width: 200px;">${node.label}</div>`)
-      .nodeRelSize(6)
-      .linkWidth(2)
-      .linkColor(() => '#666')
-      .onNodeClick(node => {
-        if (node.url) {
-          window.open(node.url, "_blank");
-        }
-      })
-      .onNodeHover(node => {
-        document.body.style.cursor = node ? 'pointer' : 'default';
-      });
+    // DOM element references
+const searchBox = document.getElementById("search");
+const errorDiv = document.getElementById("error");
+const nodeCountSpan = document.getElementById("nodeCount");
+const linkCountSpan = document.getElementById("linkCount");
 
-    // Handle window resize
-    window.addEventListener('resize', () => {
-      Graph.width(window.innerWidth).height(window.innerHeight);
-    });
+// State variables
+let showLinks = true;
+let originalData = null;
 
-    // Control functions
-    function resetView() {
-      Graph.zoomToFit(400);
+// Initialize the force graph
+const Graph = ForceGraph()(document.getElementById("graph"))
+  .width(window.innerWidth)
+  .height(window.innerHeight)
+  .nodeAutoColorBy("cluster")
+  .nodeLabel(node => `<div style="background: rgba(0,0,0,0.8); padding: 5px; border-radius: 3px; color: white; max-width: 200px;">${node.label}</div>`)
+  .nodeRelSize(6)
+  .linkWidth(2)
+  .linkColor(() => '#666')
+  .onNodeClick(node => {
+    if (node.url) {
+      window.open(node.url, "_blank");
     }
-    
-    function toggleLinks() {
-      showLinks = !showLinks;
-      if (originalData) {
-        Graph.graphData({
-          nodes: originalData.nodes,
-          links: showLinks ? originalData.links : []
-        });
-      }
-    }
+  })
+  .onNodeHover(node => {
+    document.body.style.cursor = node ? 'pointer' : 'default';
+  });
 
-    // Enhanced search functionality
-    searchBox.addEventListener("input", () => {
-      const query = searchBox.value.toLowerCase().trim();
-      
-      if (query === '') {
-        // Show all nodes when search is empty
-        Graph.nodeVisibility(() => true);
-        Graph.linkVisibility(() => showLinks);
-      } else {
-        // Filter nodes and connected links
-        const visibleNodeIds = new Set();
-        
-        Graph.nodeVisibility(node => {
-          const isVisible = node.label.toLowerCase().includes(query) || 
-                           (node.cluster && node.cluster.toLowerCase().includes(query));
-          if (isVisible) {
-            visibleNodeIds.add(node.id);
-          }
-          return isVisible;
-        });
-        
-        Graph.linkVisibility(link => {
-          return showLinks && (visibleNodeIds.has(link.source.id || link.source) || 
-                              visibleNodeIds.has(link.target.id || link.target));
-        });
-      }
-    });
-
-    // Load and process data
-    console.log('Attempting to load from GoogleSheets / fallback load graph-data.json');
-
-loadFromGoogleSheets().then(sheetsData => {
-  if (sheetsData && sheetsData.nodes && sheetsData.nodes.length > 0) {
-    console.log('Loaded from Google Sheets:', sheetsData);
-    originalData = sheetsData;
-    Graph.graphData(sheetsData);
-    nodeCountSpan.textContent = sheetsData.nodes.length;
-    linkCountSpan.textContent = sheetsData.links.length;
-    setTimeout(() => Graph.zoomToFit(400), 100);
-  } else {
-    // Fallback to graph-data.json
-    return fetch("graph-data.json")
-      .then(response => {
-        console.log('Response status:', response.status, response.statusText);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Successfully loaded data from graph-data.json:', data);
-        originalData = data;
-        Graph.graphData(data);
-        nodeCountSpan.textContent = data.nodes.length;
-        linkCountSpan.textContent = data.links.length;
-        setTimeout(() => Graph.zoomToFit(400), 100);
-      })
-      .catch(error => {
-        console.error('Error loading data from graph-data.json:', error);
-        // Your error display code here
-      });
-  }
-}).catch(error => {
-  console.error('All data sources failed:', error);
-  // Your error display code here
+// Handle window resize
+window.addEventListener('resize', () => {
+  Graph.width(window.innerWidth).height(window.innerHeight);
 });
-        console.log('Successfully loaded data:', data);
-        
-        // Validate data structure
-        if (!data.nodes || !Array.isArray(data.nodes)) {
-          throw new Error('Invalid or missing nodes array in JSON');
-        }
-        
-        if (!data.links || !Array.isArray(data.links)) {
-          throw new Error('Invalid or missing links array in JSON');
-        }
-        
-        // Validate node-link consistency
-        const nodeIds = new Set(data.nodes.map(n => n.id));
-        const invalidLinks = data.links.filter(l => 
-          !nodeIds.has(l.source) || !nodeIds.has(l.target)
-        );
-        
-        if (invalidLinks.length > 0) {
-          console.warn('Found links referencing non-existent nodes:', invalidLinks);
-        }
-        
-        // Store original data
-        originalData = data;
-        
-        // Update counters
-        nodeCountSpan.textContent = data.nodes.length;
-        linkCountSpan.textContent = data.links.length;
-        
-        // Load graph
-        Graph.graphData(data);
-        
-        // Auto-fit to view
-        setTimeout(() => Graph.zoomToFit(400), 100);
-        
-        console.log('Graph successfully initialized');
-         }
+
+// Control functions
+function resetView() {
+  Graph.zoomToFit(400);
+}
+
+function toggleLinks() {
+  showLinks = !showLinks;
+  if (originalData) {
+    Graph.graphData({
+      nodes: originalData.nodes,
+      links: showLinks ? originalData.links : []
+    });
+  }
+}
+
+// Enhanced search functionality
+searchBox.addEventListener("input", () => {
+  const query = searchBox.value.toLowerCase().trim();
+  
+  if (query === '') {
+    // Show all nodes when search is empty
+    Graph.nodeVisibility(() => true);
+    Graph.linkVisibility(() => showLinks);
+  } else {
+    // Filter nodes and connected links
+    const visibleNodeIds = new Set();
+    
+    Graph.nodeVisibility(node => {
+      const isVisible = node.label.toLowerCase().includes(query) || 
+                       (node.cluster && node.cluster.toLowerCase().includes(query)) ||
+                       (node.tags && node.tags.some(tag => tag.toLowerCase().includes(query)));
+      if (isVisible) {
+        visibleNodeIds.add(node.id);
       }
-      .catch(error => {
-        console.error('Error loading graph data:', error);
-        errorDiv.innerHTML = `
-          <h3>❌ Error Loading Network Graph</h3>
-          <p><strong>Issue:</strong> ${error.message}</p>
-          <h4>Troubleshooting Steps:</h4>
-          <ul style="text-align: left; max-width: 400px;">
-            <li>Check if <code>graph-data.json</code> exists in repository root</li>
-            <li>Verify JSON syntax at <a href="https://jsonlint.com" target="_blank" style="color: #69b3ff;">JSONLint.com</a></li>
-            <li>Ensure GitHub Pages is properly enabled</li>
-            <li>Check browser console (F12) for detailed errors</li>
-          </ul>
-          <p><a href="https://github.com/SP224/organizing-india-network" target="_blank" style="color: #69b3ff;">View Repository</a></p>
-        `;
-        errorDiv.style.display = 'block';
-      });
+      return isVisible;
+    });
+    
+    Graph.linkVisibility(link => {
+      return showLinks && (visibleNodeIds.has(link.source.id || link.source) || 
+                          visibleNodeIds.has(link.target.id || link.target));
+    });
+  }
+});
+
+/**
+ * Validates the structure and integrity of graph data
+ */
+function validateGraphData(data) {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Data must be a valid object');
+  }
+
+  if (!data.nodes || !Array.isArray(data.nodes)) {
+    throw new Error('Invalid or missing nodes array in data');
+  }
+
+  if (!data.links || !Array.isArray(data.links)) {
+    throw new Error('Invalid or missing links array in data');
+  }
+
+  if (data.nodes.length === 0) {
+    throw new Error('No nodes found in data');
+  }
+
+  // Validate node structure
+  const invalidNodes = data.nodes.filter(node => !node.id || !node.label);
+  if (invalidNodes.length > 0) {
+    console.warn(`Found ${invalidNodes.length} nodes missing id or label:`, invalidNodes);
+  }
+
+  // Validate node-link consistency
+  const nodeIds = new Set(data.nodes.map(n => String(n.id)));
+  const invalidLinks = data.links.filter(link => {
+    const sourceId = String(link.source.id || link.source);
+    const targetId = String(link.target.id || link.target);
+    return !nodeIds.has(sourceId) || !nodeIds.has(targetId);
+  });
+
+  if (invalidLinks.length > 0) {
+    console.warn(`Found ${invalidLinks.length} links referencing non-existent nodes:`, invalidLinks);
+    // Filter out invalid links
+    data.links = data.links.filter(link => {
+      const sourceId = String(link.source.id || link.source);
+      const targetId = String(link.target.id || link.target);
+      return nodeIds.has(sourceId) && nodeIds.has(targetId);
+    });
+  }
+
+  return data;
+}
+
+/**
+ * Updates the UI with loaded data
+ */
+function updateGraphUI(data) {
+  // Store original data
+  originalData = data;
+  
+  // Update counters
+  nodeCountSpan.textContent = data.nodes.length;
+  linkCountSpan.textContent = data.links.length;
+  
+  // Load graph
+  Graph.graphData(data);
+  
+  // Auto-fit to view after a brief delay
+  setTimeout(() => Graph.zoomToFit(400), 100);
+  
+  // Hide error div if it was shown
+  errorDiv.style.display = 'none';
+  
+  console.log(`Graph successfully initialized with ${data.nodes.length} nodes and ${data.links.length} links`);
+}
+
+/**
+ * Displays error message in the UI
+ */
+function displayError(error, context = 'loading graph data') {
+  console.error(`Error ${context}:`, error);
+  
+  errorDiv.innerHTML = `
+    <h3>❌ Error Loading Network Graph</h3>
+    <p><strong>Issue:</strong> ${error.message || error}</p>
+    <p><strong>Context:</strong> ${context}</p>
+    <h4>Troubleshooting Steps:</h4>
+    <ul style="text-align: left; max-width: 400px;">
+      <li>Check if <code>graph-data.json</code> exists in repository root</li>
+      <li>Verify JSON syntax at <a href="https://jsonlint.com" target="_blank" style="color: #69b3ff;">JSONLint.com</a></li>
+      <li>Ensure Google Sheets API is properly configured</li>
+      <li>Check browser console (F12) for detailed errors</li>
+      <li>Verify network connection</li>
+    </ul>
+    <p><a href="https://github.com/SP224/organizing-india-network" target="_blank" style="color: #69b3ff;">View Repository</a></p>
+  `;
+  errorDiv.style.display = 'block';
+}
+
+/**
+ * Loads data from JSON file as fallback
+ */
+async function loadFromJsonFile() {
+  try {
+    console.log('Loading data from graph-data.json...');
+    
+    const response = await fetch("graph-data.json");
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Successfully loaded data from graph-data.json:', data);
+    
+    return validateGraphData(data);
+    
+  } catch (error) {
+    throw new Error(`Failed to load graph-data.json: ${error.message}`);
+  }
+}
+
+/**
+ * Main function to load and initialize the graph
+ */
+async function initializeGraph() {
+  try {
+    console.log('Attempting to load from Google Sheets...');
+    
+    // First try to load from Google Sheets
+    let data = null;
+    
+    try {
+      data = await loadFromGoogleSheets();
+      
+      if (data && data.nodes && data.nodes.length > 0) {
+        console.log('Successfully loaded from Google Sheets:', data);
+        data = validateGraphData(data);
+        updateGraphUI(data);
+        return;
+      } else {
+        console.log('No data from Google Sheets, trying JSON fallback...');
+      }
+    } catch (sheetsError) {
+      console.warn('Google Sheets loading failed:', sheetsError.message);
+      console.log('Falling back to JSON file...');
+    }
+    
+    // Fallback to JSON file
+    try {
+      data = await loadFromJsonFile();
+      updateGraphUI(data);
+    } catch (jsonError) {
+      throw new Error(`All data sources failed. Google Sheets: ${sheetsError?.message || 'unavailable'}. JSON: ${jsonError.message}`);
+    }
+    
+  } catch (error) {
+    displayError(error, 'initializing graph');
+  }
+}
+
+// Initialize the graph when the page loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeGraph);
+} else {
+  initializeGraph();
+}
   </script>
 </body>
 </html>
