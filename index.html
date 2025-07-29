@@ -219,6 +219,11 @@
         
         // Load graph
         Graph.graphData(data);
+
+        // Adjust force-directed graph parameters for compactness
+        Graph
+          .d3Force('charge', d3.forceManyBody().strength(-100)) // Less repulsion
+          .d3Force('link', d3.forceLink(data.links).id(d => d.id).distance(30).strength(1)); // Stronger, shorter links
         
         // Auto-fit to view
         setTimeout(() => Graph.zoomToFit(400), 100);
