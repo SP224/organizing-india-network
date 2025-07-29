@@ -1,60 +1,414 @@
 {
   "nodes": [
     {
-      "id": "1",
-      "label": "Transforming India's Electric Utilities",
-      "url": "https://organizing-india.blogspot.com/2023/05/transforming-indias-electric-utilities.html",
-      "cluster": "Energy",
-      "color": "#f94144"
+      "id": "article_0",
+      "label": "Inflation Control Through Structural Reforms",
+      "url": "https://organizing-india.blogspot.com/2012/12/inflation-control-through-structural.html",
+      "cluster": "Topic 4",
+      "color": "#f9c74f"
     },
     {
-      "id": "2",
-      "label": "India's LNG Opportunity",
-      "url": "https://organizing-india.blogspot.com/2021/04/indias-lng-opportunity.html",
-      "cluster": "Energy",
-      "color": "#f94144"
+      "id": "article_1",
+      "label": "'Containing Inflation' - A Myth",
+      "url": "https://organizing-india.blogspot.com/2008/08/containing-inflation-myth.html",
+      "cluster": "Topic 4",
+      "color": "#f9c74f"
     },
     {
-      "id": "3",
-      "label": "Digital Infrastructure for Public Services",
-      "url": "https://organizing-india.blogspot.com/2022/11/digital-infrastructure-for-public.html",
-      "cluster": "Digital",
-      "color": "#577590"
-    },
-    {
-      "id": "4",
-      "label": "Enabling Broadband through PPP",
-      "url": "https://organizing-india.blogspot.com/2021/09/enabling-broadband-through-ppp.html",
-      "cluster": "Digital",
-      "color": "#577590"
-    },
-    {
-      "id": "5",
-      "label": "Redesigning Rural Broadband",
-      "url": "https://organizing-india.blogspot.com/2022/01/redesigning-rural-broadband.html",
-      "cluster": "Digital",
-      "color": "#577590"
-    },
-    {
-      "id": "6",
-      "label": "Why Regulatory Reform Matters",
-      "url": "https://organizing-india.blogspot.com/2020/01/why-regulatory-reform-matters.html",
-      "cluster": "Governance",
+      "id": "article_2",
+      "label": "Using Spectrum for the Common Good",
+      "url": "https://organizing-india.blogspot.com/2020/11/using-spectrum-for-common-good.html",
+      "cluster": "Topic 3",
       "color": "#f8961e"
     },
     {
-      "id": "7",
-      "label": "Making State Capacity Work",
-      "url": "https://organizing-india.blogspot.com/2019/08/making-state-capacity-work.html",
-      "cluster": "Governance",
+      "id": "article_3",
+      "label": "The Coming 3G Auction Blunder",
+      "url": "https://organizing-india.blogspot.com/2008/12/coming-3g-auction-blunder.html",
+      "cluster": "Topic 3",
+      "color": "#f8961e"
+    },
+    {
+      "id": "article_4",
+      "label": "Making The Most Of The Cash Flow Crisis",
+      "url": "https://organizing-india.blogspot.com/2016/12/making-most-of-cash-flow-crisis.html",
+      "cluster": "Topic 9",
+      "color": "#277da1"
+    },
+    {
+      "id": "article_5",
+      "label": "The 2G Judgment of December 2017: What Was It About?",
+      "url": "https://organizing-india.blogspot.com/2018/01/the-2g-judgment-of-december-2017-what.html",
+      "cluster": "Topic 8",
+      "color": "#577590"
+    },
+    {
+      "id": "article_6",
+      "label": "Matching Realities and Aspirations",
+      "url": "https://organizing-india.blogspot.com/2018/02/matching-realities-and-aspirations.html",
+      "cluster": "Topic 5",
+      "color": "#90be6d"
+    },
+    {
+      "id": "article_7",
+      "label": "Organisational Hurdles in Telecom",
+      "url": "https://organizing-india.blogspot.com/2017/03/organisational-hurdles-in-telecom.html",
+      "cluster": "Topic 3",
+      "color": "#f8961e"
+    },
+    {
+      "id": "article_8",
+      "label": "FDI Needs a Strategy",
+      "url": "https://organizing-india.blogspot.com/2012/02/fdi-needs-strategy.html",
+      "cluster": "Topic 1",
+      "color": "#f94144"
+    },
+    {
+      "id": "article_9",
+      "label": "Democracy, Digital India and Networks",
+      "url": "https://organizing-india.blogspot.com/2019/05/democracy-digital-india-and-networks.html",
+      "cluster": "Topic 7",
+      "color": "#4d908e"
+    },
+    {
+      "id": "article_10",
+      "label": "Preferential Market Access: A Policy Lost in Translation?",
+      "url": "https://organizing-india.blogspot.com/2014/04/preferential-market-access-policy-lost.html",
+      "cluster": "Topic 1",
+      "color": "#f94144"
+    },
+    {
+      "id": "article_11",
+      "label": "'Ideal' Inflation & Exchange Rates for India",
+      "url": "https://organizing-india.blogspot.com/2008/04/ideal-inflation-exchange-rates-for.html",
+      "cluster": "Topic 4",
+      "color": "#f9c74f"
+    },
+    {
+      "id": "article_12",
+      "label": "Facts, Not Beliefs, Should Drive Policies",
+      "url": "https://organizing-india.blogspot.com/2017/04/facts-not-beliefs-should-drive-policies.html",
+      "cluster": "Topic 6",
+      "color": "#43aa8b"
+    },
+    {
+      "id": "article_13",
+      "label": "Competition, open skies ...and bust?",
+      "url": "https://organizing-india.blogspot.com/2008/04/competition-open-skies-and-bust.html",
+      "cluster": "Topic 7",
+      "color": "#4d908e"
+    },
+    {
+      "id": "article_14",
+      "label": "Extractive Charges on Spectrum & Petroleum",
+      "url": "https://organizing-india.blogspot.com/2014/03/extractive-charges-on-spectrum-petroleum.html",
+      "cluster": "Topic 3",
+      "color": "#f8961e"
+    },
+    {
+      "id": "article_15",
+      "label": "For a Telecom Revival",
+      "url": "https://organizing-india.blogspot.com/2013/12/for-telecom-revival.html",
+      "cluster": "Topic 3",
+      "color": "#f8961e"
+    },
+    {
+      "id": "article_16",
+      "label": "China 3: Build Comprehensive Ecosystems",
+      "url": "https://organizing-india.blogspot.com/2012/04/china-3-build-comprehensive.html",
+      "cluster": "Topic 3",
+      "color": "#f8961e"
+    },
+    {
+      "id": "article_17",
+      "label": "Configuring India's Digital Ecosystem",
+      "url": "https://organizing-india.blogspot.com/2020/08/configuring-indias-digital-ecosystem.html",
+      "cluster": "Topic 2",
+      "color": "#f3722c"
+    },
+    {
+      "id": "article_18",
+      "label": "Those Dropped Calls!",
+      "url": "https://organizing-india.blogspot.com/2015/08/those-dropped-calls.html",
+      "cluster": "Topic 3",
+      "color": "#f8961e"
+    },
+    {
+      "id": "article_19",
+      "label": "Tulips & Bulbs from Keukenhof",
+      "url": "https://organizing-india.blogspot.com/2008/04/tulips-bulbs-from-keukenhof.html",
+      "cluster": "Topic 7",
+      "color": "#4d908e"
+    },
+    {
+      "id": "article_20",
+      "label": "Reviving BSNL & MTNL: The Right Ringtone",
+      "url": "https://organizing-india.blogspot.com/2010/04/reviving-bsnl-mtnl-right-ringtone.html",
+      "cluster": "Topic 2",
+      "color": "#f3722c"
+    },
+    {
+      "id": "article_21",
+      "label": "Breaking the Mould: India's Own Growth Path",
+      "url": "https://organizing-india.blogspot.com/2008/04/breaking-mould-indias-own-growth-path.html",
+      "cluster": "Topic 7",
+      "color": "#4d908e"
+    },
+    {
+      "id": "article_22",
+      "label": "Extend The Tax-Cut Logic To Infrastructure",
+      "url": "https://organizing-india.blogspot.com/2019/10/extend-tax-cut-logic-to-infrastructure.html",
+      "cluster": "Topic 4",
+      "color": "#f9c74f"
+    },
+    {
+      "id": "article_23",
+      "label": "A Constructive Agenda for the AAP [Arvind Kejriwal]",
+      "url": "https://organizing-india.blogspot.com/2014/01/a-constructive-agenda-for-aap-arvind.html",
+      "cluster": "Topic 5",
+      "color": "#90be6d"
+    },
+    {
+      "id": "article_24",
+      "label": "The Supreme Court & Spectrum Management",
+      "url": "https://organizing-india.blogspot.com/2013/02/the-supreme-court-spectrum-management.html",
+      "cluster": "Topic 3",
+      "color": "#f8961e"
+    },
+    {
+      "id": "article_25",
+      "label": "It Can Be Done Here",
+      "url": "https://organizing-india.blogspot.com/2008/04/it-can-be-done-here.html",
+      "cluster": "Topic 5",
+      "color": "#90be6d"
+    },
+    {
+      "id": "article_26",
+      "label": "Petrol & Diesel Pricing",
+      "url": "https://organizing-india.blogspot.com/2018/06/petrol-diesel-pricing.html",
+      "cluster": "Topic 10",
+      "color": "#f94144"
+    },
+    {
+      "id": "article_27",
+      "label": "Super WiFi & Shared Spectrum",
+      "url": "https://organizing-india.blogspot.com/2012/11/super-wifi-shared-spectrum.html",
+      "cluster": "Topic 3",
       "color": "#f8961e"
     }
   ],
   "links": [
-    { "source": "1", "target": "2" },
-    { "source": "3", "target": "4" },
-    { "source": "3", "target": "5" },
-    { "source": "6", "target": "7" },
-    { "source": "1", "target": "6" }
+    {
+      "source": "article_0",
+      "target": "article_1"
+    },
+    {
+      "source": "article_0",
+      "target": "article_11"
+    },
+    {
+      "source": "article_0",
+      "target": "article_22"
+    },
+    {
+      "source": "article_1",
+      "target": "article_11"
+    },
+    {
+      "source": "article_1",
+      "target": "article_22"
+    },
+    {
+      "source": "article_2",
+      "target": "article_3"
+    },
+    {
+      "source": "article_2",
+      "target": "article_7"
+    },
+    {
+      "source": "article_2",
+      "target": "article_14"
+    },
+    {
+      "source": "article_2",
+      "target": "article_15"
+    },
+    {
+      "source": "article_2",
+      "target": "article_16"
+    },
+    {
+      "source": "article_2",
+      "target": "article_18"
+    },
+    {
+      "source": "article_2",
+      "target": "article_24"
+    },
+    {
+      "source": "article_2",
+      "target": "article_27"
+    },
+    {
+      "source": "article_3",
+      "target": "article_7"
+    },
+    {
+      "source": "article_3",
+      "target": "article_14"
+    },
+    {
+      "source": "article_3",
+      "target": "article_15"
+    },
+    {
+      "source": "article_3",
+      "target": "article_16"
+    },
+    {
+      "source": "article_3",
+      "target": "article_18"
+    },
+    {
+      "source": "article_3",
+      "target": "article_24"
+    },
+    {
+      "source": "article_3",
+      "target": "article_27"
+    },
+    {
+      "source": "article_6",
+      "target": "article_23"
+    },
+    {
+      "source": "article_6",
+      "target": "article_25"
+    },
+    {
+      "source": "article_7",
+      "target": "article_14"
+    },
+    {
+      "source": "article_7",
+      "target": "article_15"
+    },
+    {
+      "source": "article_7",
+      "target": "article_16"
+    },
+    {
+      "source": "article_7",
+      "target": "article_18"
+    },
+    {
+      "source": "article_7",
+      "target": "article_24"
+    },
+    {
+      "source": "article_7",
+      "target": "article_27"
+    },
+    {
+      "source": "article_8",
+      "target": "article_10"
+    },
+    {
+      "source": "article_9",
+      "target": "article_13"
+    },
+    {
+      "source": "article_9",
+      "target": "article_19"
+    },
+    {
+      "source": "article_9",
+      "target": "article_21"
+    },
+    {
+      "source": "article_11",
+      "target": "article_22"
+    },
+    {
+      "source": "article_13",
+      "target": "article_19"
+    },
+    {
+      "source": "article_13",
+      "target": "article_21"
+    },
+    {
+      "source": "article_14",
+      "target": "article_15"
+    },
+    {
+      "source": "article_14",
+      "target": "article_16"
+    },
+    {
+      "source": "article_14",
+      "target": "article_18"
+    },
+    {
+      "source": "article_14",
+      "target": "article_24"
+    },
+    {
+      "source": "article_14",
+      "target": "article_27"
+    },
+    {
+      "source": "article_15",
+      "target": "article_16"
+    },
+    {
+      "source": "article_15",
+      "target": "article_18"
+    },
+    {
+      "source": "article_15",
+      "target": "article_24"
+    },
+    {
+      "source": "article_15",
+      "target": "article_27"
+    },
+    {
+      "source": "article_16",
+      "target": "article_18"
+    },
+    {
+      "source": "article_16",
+      "target": "article_24"
+    },
+    {
+      "source": "article_16",
+      "target": "article_27"
+    },
+    {
+      "source": "article_17",
+      "target": "article_20"
+    },
+    {
+      "source": "article_18",
+      "target": "article_24"
+    },
+    {
+      "source": "article_18",
+      "target": "article_27"
+    },
+    {
+      "source": "article_19",
+      "target": "article_21"
+    },
+    {
+      "source": "article_23",
+      "target": "article_25"
+    },
+    {
+      "source": "article_24",
+      "target": "article_27"
+    }
   ]
 }
