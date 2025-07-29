@@ -127,7 +127,9 @@
       })
       .onNodeHover(node => {
         document.body.style.cursor = node ? 'pointer' : 'default';
-      });
+      })
+      .d3Force('charge', d3.forceManyBody().strength(-100)) // Adjusted for compactness
+      .d3Force('link', d3.forceLink(data.links).id(d => d.id).distance(30).strength(1)); // Adjusted for compactness
 
     // Handle window resize
     window.addEventListener('resize', () => {
@@ -224,11 +226,14 @@
         const colors = ["#f94144", "#f3722c", "#f8961e", "#f9c74f", "#90be6d", "#43aa8b", "#4d908e", "#577590", "#277da1", "#f94144"];
 
         // Populate legend
-        const uniqueClusters = [...new Set(data.nodes.map(node => node.cluster))].sort();
+        const uniqueClusters = [...new Set(data.nodes.map(node => node.cluster))].sort((a, b) => {
+          const numA = parseInt(a.replace('Topic ', ''));
+          const numB = parseInt(b.replace('Topic ', ''));
+          return numA - numB;
+        });
         const legendDiv = document.getElementById('legend');
         legendDiv.innerHTML = '<h3>Clusters</h3>';
         uniqueClusters.forEach(clusterName => {
-          // Get the color based on the cluster name (e.g., "Topic 1" -> index 0)
           const clusterIndex = parseInt(clusterName.replace('Topic ', '')) - 1;
           const color = colors[clusterIndex % colors.length];
           
