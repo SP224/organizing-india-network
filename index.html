@@ -220,14 +220,18 @@
         // Auto-fit to view
         setTimeout(() => Graph.zoomToFit(400), 100);
         
+        // Define the color palette (must match scraper.py)
+        const colors = ["#f94144", "#f3722c", "#f8961e", "#f9c74f", "#90be6d", "#43aa8b", "#4d908e", "#577590", "#277da1", "#f94144"];
+
         // Populate legend
         const uniqueClusters = [...new Set(data.nodes.map(node => node.cluster))].sort();
         const legendDiv = document.getElementById('legend');
         legendDiv.innerHTML = '<h3>Clusters</h3>';
         uniqueClusters.forEach(clusterName => {
-          const tempNode = { cluster: clusterName };
-          const color = Graph.nodeAutoColorBy()(tempNode);
-          console.log(`Legend Item: Cluster - ${clusterName}, Color - ${color}`); // Debug log
+          // Get the color based on the cluster name (e.g., "Topic 1" -> index 0)
+          const clusterIndex = parseInt(clusterName.replace('Topic ', '')) - 1;
+          const color = colors[clusterIndex % colors.length];
+          
           const legendItem = document.createElement('div');
           legendItem.className = 'legend-item';
           legendItem.innerHTML = `
