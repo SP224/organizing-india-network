@@ -62,6 +62,31 @@
     .control-button:hover {
       background: #456b7a;
     }
+
+    #legend {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 4px;
+      max-height: calc(100vh - 20px);
+      overflow-y: auto;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 12px;
+    }
+    .legend-color-box {
+      width: 15px;
+      height: 15px;
+      border-radius: 3px;
+      margin-right: 8px;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
 </style>
 </head>
 <body>
@@ -74,6 +99,7 @@
       <span>Links: <span id="linkCount">0</span></span>
     </div>
   </div>
+  <div id="legend"></div>
   <div id="graph"></div>
   <div id="error" style="display: none;"></div>
   <script src="https://unpkg.com/force-graph@1.43.0"></script>
@@ -192,8 +218,25 @@
         Graph.graphData(data);
         
         // Auto-fit to view
-        setTimeout(() => Graph.zoomToFitt(400), 100);
+        setTimeout(() => Graph.zoomToFit(400), 100);
         
+        // Populate legend
+        const uniqueClusters = [...new Set(data.nodes.map(node => node.cluster))].sort();
+        const legendDiv = document.getElementById('legend');
+        legendDiv.innerHTML = '<h3>Clusters</h3>';
+        uniqueClusters.forEach(clusterName => {
+          const tempNode = { cluster: clusterName };
+          const color = Graph.nodeAutoColorBy()(tempNode);
+          console.log(`Legend Item: Cluster - ${clusterName}, Color - ${color}`); // Debug log
+          const legendItem = document.createElement('div');
+          legendItem.className = 'legend-item';
+          legendItem.innerHTML = `
+            <div class="legend-color-box" style="background-color: ${color};"></div>
+            <span>${clusterName}</span>
+          `;
+          legendDiv.appendChild(legendItem);
+        });
+
         console.log('Graph successfully initialized');
         
       })
