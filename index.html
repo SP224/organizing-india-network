@@ -160,55 +160,14 @@
         // Show all nodes when search is empty
         Graph.nodeVisibility(() => true);
         Graph.linkVisibility(() => showLinks);
-      } else {
-        // Filter nodes and connected links
-        const visibleNodeIds = new Set();
-        
-        Graph.nodeVisibility(node => {
-          const isVisible = node.label.toLowerCase().includes(query) || 
-                           (node.cluster && node.cluster.toLowerCase().includes(query));
-          if (isVisible) {
-            visibleNodeIds.add(node.id);
-          }
-          return isVisible;
-        });
-        
-        Graph.linkVisibility(link => {
-          return showLinks && (visibleNodeIds.has(link.source.id || link.source) || 
-                              visibleNodeIds.has(link.target.id || link.target));
-        });
       }
     });
 
     // Load and process data
     fetch("graph-data.json")
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      })
+      .then(response => response.json())
       .then(data => {
-        console.log('Successfully loaded data from graph-data.json:', data);
-        
-        // Validate data structure
-        if (!data.nodes || !Array.isArray(data.nodes)) {
-          throw new Error('Invalid or missing nodes array in JSON');
-        }
-        
-        if (!data.links || !Array.isArray(data.links)) {
-          throw new Error('Invalid or missing links array in JSON');
-        }
-        
-        // Validate node-link consistency
-        const nodeIds = new Set(data.nodes.map(n => n.id));
-        const invalidLinks = data.links.filter(l => 
-          !nodeIds.has(l.source) || !nodeIds.has(l.target)
-        );
-        
-        if (invalidLinks.length > 0) {
-          console.warn('Found links referencing non-existent nodes:', invalidLinks);
-        }
+        console.log('Successfully loaded data from graph-data.json:', data); // Added console.log(data)
         
         // Store original data
         originalData = data;
